@@ -9,7 +9,10 @@ fn main() {
 "#;
 
 fn main() {
-    
+    println!("save source");
     compile::save_source("test", &SOURCE_CODE.bytes().collect::<Vec<_>>()).unwrap();
+    println!("compile");
     compile::compile("test").unwrap();
+    println!("run");
+    execute::run("test").unwrap();
 }
