@@ -14,5 +14,5 @@ fn main() {
     println!("compile");
     compile::compile("test").unwrap();
     println!("run");
-    execute::run("test").unwrap();
+    eprintln!("{:?}", execute::Execution::new("test").unwrap().execute("").unwrap());
 }
