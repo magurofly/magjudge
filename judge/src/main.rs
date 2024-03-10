@@ -3,8 +3,11 @@ pub mod compile;
 pub mod execute;
 
 const SOURCE_CODE: &'static str = r#"
+use std::io;
 fn main() {
-    println!("hello, world");
+    let mut buf = String::new();
+    io::stdin().read_line(&mut buf).unwrap();
+    println!("Input: {}", buf);
 }
 "#;
 
@@ -14,5 +17,5 @@ fn main() {
     println!("compile");
     compile::compile("test").unwrap();
     println!("run");
-    eprintln!("{:?}", execute::Execution::new("test").unwrap().execute("").unwrap());
+    eprintln!("{:?}", execute::Execution::new("test").unwrap().execute("hello").unwrap());
 }

@@ -1,10 +1,17 @@
 use crate::config::*;
 
+use std::os::unix::process::ExitStatusExt;
 use std::process::*;
 use std::fs::*;
 use std::path::*;
 use std::io::Write;
 use std::error::*;
+
+pub struct CompileResult {
+    pub status: i32,
+    pub stdout: String,
+    pub stderr: String,
+}
 
 pub fn save_source(submission_id: &str, source_code: &[u8]) -> Result<(), Box<dyn Error>> {
     // validate
@@ -18,7 +25,7 @@ pub fn save_source(submission_id: &str, source_code: &[u8]) -> Result<(), Box<dy
     Ok(())
 }
 
-pub fn compile(submission_id: &str) -> Result<(), Box<dyn Error>> {
+pub fn compile(submission_id: &str) -> Result<CompileResult, Box<dyn Error>> {
     // validate
     if !submission_id.chars().all(char::is_alphanumeric) {
         return Err("submission_id contains invalid characters".into());
@@ -29,8 +36,12 @@ pub fn compile(submission_id: &str) -> Result<(), Box<dyn Error>> {
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
         .output()?;
-    println!("{}", String::from_utf8(output.stdout).unwrap());
-    Ok(())
+
+    let status = output.status.into_raw();
+    let stdout = String::from_utf8(output.stdout)?;
+    let stderr = String::from_utf8(output.stderr)?;
+
+    Ok(CompileResult { status, stdout, stderr })
 }
 
 fn source_path(submission_id: &str) -> PathBuf {
@@ -58,7 +69,7 @@ fn compile_args(submission_id: &str) -> Vec<String> {
     for lib in &libs {
         args.push(format!("--extern={lib}"));
     }
-    args.push(format!("--out-dir={}", PathBuf::from(EXECUTE_DIR).join(submission_id).join("home/judge").to_str().unwrap()));
+    args.push(format!("--out-dir={}", PathBuf::from(EXECUTE_DIR).join(submission_id).to_str().unwrap()));
     args.push("-L".to_string());
     args.push(opt_dependency);
     args.push(source_path.to_str().unwrap().to_string());
