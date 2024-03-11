@@ -12,6 +12,7 @@ use self::execute::*;
 
 pub struct Program {
     submission_id: String,
+    compile_result: CompilingResult,
 }
 
 impl Program {
@@ -26,16 +27,20 @@ impl Program {
         save_source(submission_id, source_code.as_bytes())?;
 
         // コンパイル
-        compile(submission_id)?;
+        let compile_result = compile(submission_id)?;
 
         // ソースコードを削除
         remove_file(&source_path(submission_id))?;
 
-        Ok(Self { submission_id: submission_id.to_string() })
+        Ok(Self { compile_result, submission_id: submission_id.to_string() })
     }
 
     pub fn run(&self, input: &str) -> Result<execute::ExecutionResult, Box<dyn Error>> {
         execute(&self.submission_id, input)
+    }
+
+    pub fn compile_result(&self) -> &CompilingResult {
+        &self.compile_result
     }
 }
 impl Drop for Program {
