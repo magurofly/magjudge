@@ -8,4 +8,4 @@ pub const EXECUTE_DIR: &'static str = "./execute";
 
 pub const TIME_LIMIT: usize = 10; // in seconds
 
-pub const KEEP_SUBMISSION_TIME: std::time::Duration = std::time::Duration::from_secs(10 * 60);
+pub const KEEP_SUBMISSION_TIME: std::time::Duration = std::time::Duration::from_secs(60);
