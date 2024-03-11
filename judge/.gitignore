@@ -1,8 +1,8 @@
-deps/
-log/
-program/
-source/
-target/
+/deps
+/log
+/program
+/source
+/target
 Cargo.lock
 safe_run
 *.pem
