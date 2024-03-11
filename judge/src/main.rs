@@ -119,6 +119,17 @@ async fn service_status(path: web::Path<String>) -> impl Responder {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    let mut certs_file = BufReader::new(File::open("cert.pem")?);
+    let mut key_file = BufReader::new(File::open("key.pem")?);
+
+    let tls_certs = rustls_pemfile::certs(&mut certs_file).collect::<std::result::Result<Vec<_>, _>>()?;
+    let tls_key = rustls_pemfile::pkcs8_private_keys(&mut key_file).next().unwrap()?;
+
+    let tls_config = rustls::ServerConfig::builder()
+        .with_no_client_auth()
+        .with_single_cert(tls_certs, rustls::pki_types::PrivateKeyDer::Pkcs8(tls_key))
+        .unwrap();
+
     HttpServer::new(move || {
         let cors = Cors::default()
             .allow_any_origin();
@@ -129,7 +140,7 @@ async fn main() -> std::io::Result<()> {
             .service(service_submit)
             .service(service_status)
     })
-        .bind("0.0.0.0:8080")?
+        .bind_rustls_0_22(("127.0.0.1", 8080), tls_config)?
         .run()
         .await
 }
@@ -147,3 +158,5 @@ use program::execute::ExecutionResult;
 use serde::*;
 use server::JudgeClient;
 use uuid::*;
+use std::io::BufReader;
+use std::fs::*;
