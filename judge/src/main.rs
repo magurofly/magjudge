@@ -1,6 +1,6 @@
 pub mod config;
-pub mod compile;
-pub mod execute;
+pub mod program;
+pub mod server;
 
 const SOURCE_CODE: &'static str = r#"
 use std::io;
@@ -12,10 +12,5 @@ fn main() {
 "#;
 
 fn main() {
-    println!("save source");
-    compile::save_source("test", &SOURCE_CODE.bytes().collect::<Vec<_>>()).unwrap();
-    println!("compile");
-    compile::compile("test").unwrap();
-    println!("run");
-    eprintln!("{:?}", execute::Execution::new("test").unwrap().execute("hello").unwrap());
+    eprintln!("{:?}", program::Program::new("test", &SOURCE_CODE).unwrap().run("hello").unwrap());
 }

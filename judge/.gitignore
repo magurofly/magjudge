@@ -4,3 +4,4 @@ program/
 source/
 target/
 Cargo.lock
+safe_run
