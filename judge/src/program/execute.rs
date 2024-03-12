@@ -11,9 +11,9 @@ pub fn execute(submission_id: &str, input: &str) -> Result<ExecutionResult, Box<
     let time_start = time::Instant::now();
 
     // 子プロセスを起動
-    let base_path = PathBuf::from(EXECUTE_DIR).join(submission_id);
+    let base_path = PathBuf::from(CONFIG.program.execute_dir.replace("{submission_id}", submission_id));
     let mut process = Command::new("timeout")
-        .args(["-s9", &TIME_LIMIT.to_string(), "./safe_run", base_path.to_str().unwrap(), "main"])
+        .args(["-s9", &CONFIG.program.time_limit.to_string(), "./safe_run", base_path.to_str().unwrap(), "main"])
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())

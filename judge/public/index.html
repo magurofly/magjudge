@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="ja">
+    <head>
+        <meta charset="UTF-8">
+        <title>Rust Run Server</title>
+    </head>
+    <body>
+        <h1>使い方</h1>
+        <section>
+            <h2>POST /submit</h2>
+            <p>ソースコードと入力（複数）を送信すると、 <code>submission_id</code> を返します。</p>
+            <p>入力形式: JSON</p>
+            <pre>{
+    "source_code": string,
+    "inputs": [string],
+}</pre>
+        </section>
+        <section>
+            <h2>GET /status/{submission_id}</h2>
+            <p>現在の状況を取得します。なお、ソースコードを送信した時刻から一定時間経過するとサーバーから削除され、取得できなくなります。</p>
+            <p>出力形式: JSON</p>
+            <pre>{
+    "status": "invalid_id" | "not_found" | "compile_error" | "pending" | "compiling" | "running" | "finished",
+    "compile_result": {
+        "status": number,
+        "stdout": string,
+        "stderr": string,
+    }?,
+    "run_results": [
+        {
+            "status": number,
+            "time_ms": number,
+            "stdout": string,
+            "stderr": string,
+        }?
+    ],
+}</pre>
+        </section>
+    </body>
+</html>

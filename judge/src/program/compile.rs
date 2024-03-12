@@ -16,7 +16,7 @@ pub struct CompilingResult {
 }
 
 pub fn save_source(submission_id: &str, source_code: &[u8]) -> Result<(), Box<dyn Error>> {
-    let mut source_file = File::create(source_path(submission_id))?;
+    let mut source_file = File::create(CONFIG.program.source_path.replace("{submission_id}", submission_id))?;
     source_file.write_all(source_code)?;
     source_file.flush()?;
     Ok(())
@@ -37,10 +37,9 @@ pub fn compile(submission_id: &str) -> Result<CompilingResult, Box<dyn Error>> {
 }
 
 fn compile_args(submission_id: &str) -> Vec<String> {
-    let source_path = source_path(submission_id);
-    let opt_dependency = format!("dependency={DEPENDENCY_DIR}");
+    let source_path = CONFIG.program.source_path.replace("{submission_id}", submission_id);
+    let opt_dependency = format!("dependency={}", CONFIG.program.dependency_dir.replace("{submission_id}", submission_id));
     let codegen_opts = ["opt-level=3", "embed-bitcode=no"];
-    let libs: Vec<&str> = vec![];
     
     let mut args = vec![];
     args.push("--crate-name=main".to_string());
@@ -53,12 +52,13 @@ fn compile_args(submission_id: &str) -> Vec<String> {
         args.push("-C".to_string());
         args.push(codegen_opt.to_string());
     }
-    for lib in &libs {
-        args.push(format!("--extern={lib}"));
+    for (name, path) in &CONFIG.program.externs {
+        args.push("--extern".to_string());
+        args.push(format!("{name}={path}"));
     }
-    args.push(format!("--out-dir={}", execute_dir(submission_id).to_str().unwrap()));
+    args.push(format!("--out-dir={}", CONFIG.program.execute_dir.replace("{submission_id}", submission_id)));
     args.push("-L".to_string());
     args.push(opt_dependency);
-    args.push(source_path.to_str().unwrap().to_string());
+    args.push(source_path);
     args
 }

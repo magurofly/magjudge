@@ -10,8 +10,10 @@ default-run = "judge"
 nix = { version = "*", features = ["sched", "mount", "fs", "hostname", "process", "user"] }
 actix-web = { version = "*", features = ["rustls-0_22"] }
 actix-cors = "*"
+actix-files = "*"
 rustls = "0.22"
 rustls-pemfile = "2"
 serde = { version = "*", features = ["derive"] }
+toml = { version = "*", features = ["parse", "display"] }
 uuid = { version = "*", features = ["v4"] }
 once_cell = "*"

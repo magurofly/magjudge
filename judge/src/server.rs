@@ -2,6 +2,7 @@ use std::collections::*;
 use std::thread;
 use std::sync::*;
 use std::sync::mpsc::*;
+use std::time::Duration;
 use std::time::Instant;
 
 use crate::server::compile::CompilingResult;
@@ -124,7 +125,7 @@ impl JudgeServer {
         }
 
         while let Some(&(submitted_time, _)) = self.remove_queue.front() {
-            if Instant::now() - submitted_time <= KEEP_SUBMISSION_TIME {
+            if Instant::now() - submitted_time <= Duration::from_secs(CONFIG.server.keep_submission_time) {
                 break;
             }
             let submission_id = self.remove_queue.pop_front().unwrap().1;

@@ -1,0 +1,15 @@
+[program]
+source_path = "source/{submission_id}.rs"
+execute_path = "execute/{submission_id}"
+time_limit = 10
+dependency_dir = ""
+externs = {}
+
+[server]
+addr_port = "localhost:443"
+ssl_cert_path = "/path/to/cert.pem"
+ssl_key_path = "/path/to/key.pem"
+keep_submission_time = 60
+public_files = {
+    "/" = "public/index.html"
+}

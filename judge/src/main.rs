@@ -19,53 +19,6 @@ pub struct SubmissionStatus {
     run_results: Vec<Option<ExecutionResult>>,
 }
 
-#[get("/")]
-async fn service_index() -> impl Responder {
-    HttpResponse::Ok().body(r#"
-<!doctype html>
-<html lang="ja">
-    <head>
-        <meta charset="UTF-8">
-        <title>Rust Run Server</title>
-    </head>
-    <body>
-        <h1>使い方</h1>
-        <section>
-            <h2>POST /submit</h2>
-            <p>ソースコードと入力（複数）を送信すると、 <code>submission_id</code> を返します。</p>
-            <p>入力形式: JSON</p>
-            <pre>{
-    "source_code": string,
-    "inputs": [string],
-}</pre>
-        </section>
-        <section>
-            <h2>GET /status/{submission_id}</h2>
-            <p>現在の状況を取得します。なお、ソースコードを送信した時刻から一定時間経過するとサーバーから削除され、取得できなくなります。</p>
-            <p>出力形式: JSON</p>
-            <pre>{
-    "status": "invalid_id" | "not_found" | "compile_error" | "pending" | "compiling" | "running" | "finished",
-    "compile_result": {
-        "status": number,
-        "stdout": string,
-        "stderr": string,
-    }?,
-    "run_results": [
-        {
-            "status": number,
-            "time_ms": number,
-            "stdout": string,
-            "stderr": string,
-        }?
-    ],
-}</pre>
-        </section>
-    </body>
-</html>
-    "#)
-}
-
-
 #[derive(Deserialize)]
 struct SubmissionRequestData {
     source_code: String,
@@ -119,8 +72,8 @@ async fn service_status(path: web::Path<String>) -> impl Responder {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    let mut certs_file = BufReader::new(File::open("cert.pem")?);
-    let mut key_file = BufReader::new(File::open("key.pem")?);
+    let mut certs_file = BufReader::new(File::open(&CONFIG.server.ssl_cert_path)?);
+    let mut key_file = BufReader::new(File::open(&CONFIG.server.ssl_key_path)?);
 
     let tls_certs = rustls_pemfile::certs(&mut certs_file).collect::<std::result::Result<Vec<_>, _>>()?;
     let tls_key = rustls_pemfile::pkcs8_private_keys(&mut key_file).next().unwrap()?;
@@ -133,14 +86,17 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(move || {
         let cors = Cors::default()
             .allow_any_origin();
-        App::new()
+        let mut app = App::new()
             .wrap(cors)
             .app_data(JudgeClient::new())
-            .service(service_index)
             .service(service_submit)
-            .service(service_status)
+            .service(service_status);
+        for (path, file) in &CONFIG.server.public_files {
+            app = app.service(actix_files::Files::new(path, file.to_string()));
+        }
+        app
     })
-        .bind_rustls_0_22(("127.0.0.1", 8080), tls_config)?
+        .bind_rustls_0_22(&CONFIG.server.addr_port, tls_config)?
         .run()
         .await
 }
@@ -152,6 +108,7 @@ fn valid_submission_id(submission_id: &str) -> bool {
 use std::time::Instant;
 use actix_web::*;
 use actix_cors::*;
+use config::CONFIG;
 use once_cell::sync::Lazy;
 use program::compile::CompilingResult;
 use program::execute::ExecutionResult;
